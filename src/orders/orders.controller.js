@@ -1,9 +1,27 @@
 const path = require("path");
 
-// Use the existing order data
+// data stored for orders; array of objects.
 const orders = require(path.resolve("src/data/orders-data"));
 
-// Use this function to assigh ID's when necessary
+// function to assign id's to new orders.
 const nextId = require("../utils/nextId");
 
-// TODO: Implement the /orders handlers needed to make the tests pass
+// LIST array of all stored orders available.
+function list(req, res) {
+    res.json({ data: orders });
+}
+
+// middleware to check if all incoming post requests have all properties.
+function bodyHasProperty(property) {
+    return function(req, res, next) {
+        const { data = {} } = req.body;
+        if (!data[property]){
+            return next({ status: 400, message: `Order must include a ${property}` });
+        }
+        next();
+    }
+}
+
+module.exports = {
+    list,
+}
