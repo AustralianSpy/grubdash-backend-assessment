@@ -13,7 +13,7 @@ function list(req, res){
 
 // middleware to check if all incoming post requests have all properties.
 function bodyHasProperty(property){
-    return function(req, res, next) {
+    return (req, res, next) => {
         const { data = {} } = req.body;
         if (!data[property]) {
             return next({ status: 400, message: `Dish must include ${property}`});
@@ -24,7 +24,7 @@ function bodyHasProperty(property){
 
 // middleware to check if all present post request properties are valid.
 function propertyIsValid(property) {
-    return function(req, res, next) {
+    return (req, res, next) => {
         const { data = {} } = req.body;
         if (property === 'price'){
             return (data[property] <= 0 || (typeof data[property]) !== 'number') ?

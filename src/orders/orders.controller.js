@@ -13,7 +13,7 @@ function list(req, res) {
 
 // middleware to check if all incoming post requests have all properties.
 function bodyHasProperty(property) {
-    return function(req, res, next) {
+    return (req, res, next) => {
         const { data = {} } = req.body;
         if (!data[property]){
             return next({ status: 400, message: `Order must include a ${property}` });
@@ -24,7 +24,7 @@ function bodyHasProperty(property) {
 
 // middleware to check if string properties (deliverTo, mobileNumber) are valid.
 function stringIsValid(property) {
-    return function(req, res, next) {
+    return (req, res, next) => {
         const { data = {} } = req.body;
         if (!data[property].length) {
             return next({ status: 400, message: `Order must include a ${property}` });
