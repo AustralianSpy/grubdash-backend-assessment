@@ -27,7 +27,9 @@ function propertyIsValid(property) {
     return function(req, res, next) {
         const { data = {} } = req.body;
         if (property === 'price'){
-            return (data[property] <= 0) ? next({ status: 400, message: `Dish must have a ${property} that is an integer greater than 0`}) : next();
+            return (data[property] <= 0 || (typeof data[property]) !== 'number') ?
+            next({ status: 400, message: `Dish must have a ${property} that is an integer greater than 0`}) :
+            next();
         } else if (!data[property].length) {
             return next({ status: 400, message: `Dish must include ${property}`});
         }
@@ -109,6 +111,14 @@ module.exports = {
     ],
     update: [
         dishExists,
+        bodyHasProperty('name'),
+        bodyHasProperty('description'),
+        bodyHasProperty('price'),
+        bodyHasProperty('image_url'),
+        propertyIsValid('name'),
+        propertyIsValid('description'),
+        propertyIsValid('price'),
+        propertyIsValid('image_url'),
         doesIdMatch,
         update,
     ],
