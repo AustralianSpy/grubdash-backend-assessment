@@ -36,32 +36,24 @@ function stringIsValid(property) {
 // check dishes property is an array and is NOT empty.
 function dishesIsValid(req, res, next) {
     const { data: { dishes } = {} } = req.body;
-    if (!Array.isArray(dishes) && dishes.length == 0) {
-        return next({ status: 400, message: `Order must include at least one dish` });
+    if (Array.isArray(dishes) && dishes.length > 0) {
+        return next();
     }
-    res.locals.dishes = dishes;
-    next();
+    next({ status: 400, message: `Order must include at least one dish` });
 }
 
 // check the property 'quantity' nested within the array of objects within 'dishes'.
 function quantityIsValid(req, res, next) {
-    const dishes = res.locals.dishes;
-    let isValid = true;
-    let failureIndex;
-
+    const { data: { dishes } = {} } = req.body;
+    
     // overall check to see if every dish in order has a quantity property
     // and if it is an integer greater than 0.
     dishes.forEach((dish) => {
         const index = dishes.indexOf(dish);
-        if (!dish.quantity || dish.quantity <= 0) {
-            isValid = false;
-            failureIndex = index;
+        if (!dish.quantity || dish.quantity <= 0 || dish.quantity !== Number(dish.quantity)) {
+            return next({ status: 400, message: `Dish ${index} must have a quantity that is an integer greater than 0` });
         }
     });
-
-    if (!isValid) {
-        return next({ status: 400, message: `Dish ${failureIndex} must have a quantity that is an integer greater than 0` });
-    }
     next();
 }
 
@@ -86,14 +78,51 @@ function orderExists(req, res, next) {
     const { orderId } = req.params;
     const foundOrder = orders.find((order) => order.id == orderId);
     if (!foundOrder) {
-        next({ status: 400, message: `Order does not exist: ${orderId}` });
+        next({ status: 404, message: `Order does not exist: ${orderId}` });
     }
     res.locals.order = foundOrder;
     next();
 }
 
+// fulfill request to view an individual order.
 function read(req, res) {
     res.json({ data: res.locals.order });
+}
+
+// check to make sure request is not attempting to alter the id of order.
+function doesIdMatch(req, res, next) {
+    const { orderId } = req.params;
+    const { data: { id } = {} } = req.body;
+
+    if (id && id !== orderId) {
+        return next({ status: 400, message: `Order id does not match route id. Order: ${id}, Route: ${orderId}` });
+    }
+    next();
+}
+
+// middleware to check if order has an appropriate 'status' property.
+function statusIsValid(req, res, next) {
+    const { data = {} } = req.body;
+    const status = data['status'];
+    const validStatus = ['pending', 'preparing', 'out-for-delivery'];
+    if (validStatus.includes(status)) {
+        return next();
+    } else if (status === 'delivered') {
+        return next({ status: 400, message: `A delivered order cannot be changed` });
+    }
+    next({ status: 400, message: `Order must have a status of pending, preparing, out-for-delivery, delivered` });
+}
+
+function update(req, res) {
+    const order = res.locals.order;
+    const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+    
+    order.deliverTo = deliverTo;
+    order.mobileNumber = mobileNumber;
+    order.status = status;
+    order.dishes = dishes;
+
+    res.json({ data: order });
 }
 
 module.exports = {
@@ -110,6 +139,19 @@ module.exports = {
     read: [
         orderExists,
         read
+    ],
+    update: [
+        orderExists,
+        bodyHasProperty('deliverTo'),
+        bodyHasProperty('mobileNumber'),
+        bodyHasProperty('dishes'),
+        stringIsValid('deliverTo'),
+        stringIsValid('mobileNumber'),
+        doesIdMatch,
+        dishesIsValid,
+        quantityIsValid,
+        statusIsValid,
+        update,
     ],
     list,
 }
