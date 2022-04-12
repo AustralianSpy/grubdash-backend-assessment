@@ -78,7 +78,7 @@ function create(req, res) {
         dishes,
     }
     orders.push(newOrder);
-    res.json({ data: newOrder });
+    res.status(201).json({ data: newOrder });
 }
 
 module.exports = {
