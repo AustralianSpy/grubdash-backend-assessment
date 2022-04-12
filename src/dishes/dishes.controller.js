@@ -66,6 +66,7 @@ function read(req, res) {
     res.json({ data: res.locals.dish });
 }
 
+// check to make sure request is not attempting to alter the id of dish.
 function doesIdMatch(req, res, next) {
     const { dishId } = req.params;
     const { data: { id } = {} } = req.body;
