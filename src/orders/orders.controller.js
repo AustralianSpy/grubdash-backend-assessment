@@ -81,6 +81,17 @@ function create(req, res) {
     res.status(201).json({ data: newOrder });
 }
 
+// middleware to check if requested order exists.
+function orderExists(req, res, next) {
+    const { orderId } = req.params;
+    const foundOrder = orders.find((order) => order.id == orderId);
+    if (!foundOrder) {
+        next({ status: 400, message: `Order does not exist: ${orderId}` });
+    }
+    res.locals.order = foundOrder;
+    next();
+}
+
 module.exports = {
     create: [
         bodyHasProperty('deliverTo'),
@@ -91,6 +102,10 @@ module.exports = {
         dishesIsValid,
         quantityIsValid,
         create
+    ],
+    read: [
+        orderExists,
+        read
     ],
     list,
 }
