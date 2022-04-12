@@ -92,6 +92,10 @@ function orderExists(req, res, next) {
     next();
 }
 
+function read(req, res) {
+    res.json({ data: res.locals.order });
+}
+
 module.exports = {
     create: [
         bodyHasProperty('deliverTo'),
